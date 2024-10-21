@@ -1,6 +1,7 @@
 from app import create_app, db
 from flask_restful import Api
 from resources import AddStudent, AddSubject, AddGrade, StudentById, SubjectById, GradeById
+from db_create import create_db
 
 app = create_app()
 api = Api(app)
@@ -14,4 +15,5 @@ api.add_resource(SubjectById, '/subject', '/subject/<int:subject_id>', '/subject
 api.add_resource(GradeById, '/grade', '/grade/<int:grade_id>', '/grade/student/<string:student_name>/subject/<string:subject_name>')
 
 if __name__ == '__main__':
+    create_db()
     app.run(debug=True)
