@@ -16,3 +16,4 @@ def create_app():
     api = Api(app)
 
     return app
+app = create_app()
