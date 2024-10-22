@@ -26,9 +26,22 @@ class AddStudent(Resource):
 
     def get(self):
         students = Student.query.all()
-        result = [{'id': student.id, 'name': student.name, 'lastname': student.lastname} for student in students]
-        return result, 200
+        result = []
+        for student in students:
+            grades = [{
+                'subject': grade.subject.name,
+                'grade_value': grade.grade_value,
+                'date': grade.date
+            } for grade in student.grades]
 
+            result.append({
+                'id': student.id,
+                'name': student.name,
+                'lastname': student.lastname,
+                'grades': grades
+            })
+
+        return result, 200
 class StudentById(Resource):
     def get(self, student_id=None, student_name=None):
         if student_id:
@@ -90,8 +103,22 @@ class AddSubject(Resource):
 
     def get(self):
         subjects = Subject.query.all()
-        result = [{'id': subject.id, 'name': subject.name} for subject in subjects]
+        result = []
+        for subject in subjects:
+            grades = [{
+                'student': f"{grade.student.name} {grade.student.lastname}",
+                'grade_value': grade.grade_value,
+                'date': grade.date
+            } for grade in subject.grades]
+
+            result.append({
+                'id': subject.id,
+                'name': subject.name,
+                'grades': grades
+            })
+
         return result, 200
+
 
 class SubjectById(Resource):
     def get(self, subject_id=None, subject_name=None):
