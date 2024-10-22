@@ -2,10 +2,12 @@ from flask_restful import Resource, Api, reqparse
 from app import db
 from models import Student, Subject, Grade
 
+# Initialize request parsers
 student_parser = reqparse.RequestParser()
 subject_parser = reqparse.RequestParser()
 grade_parser = reqparse.RequestParser()
 
+# Define arguments for each parser
 student_parser.add_argument('name', type=str, required=True)
 student_parser.add_argument('lastname', type=str, required=True)
 
@@ -16,6 +18,7 @@ grade_parser.add_argument('subject_id', type=int, required=True)
 grade_parser.add_argument('date', type=str, required=True)
 grade_parser.add_argument('grade_value', type=float, required=True)
 
+# Resource to add a student
 class AddStudent(Resource):
     def post(self):
         args = student_parser.parse_args()
@@ -24,24 +27,7 @@ class AddStudent(Resource):
         db.session.commit()
         return {'message': 'Student added successfully'}, 201
 
-    def get(self):
-        students = Student.query.all()
-        result = []
-        for student in students:
-            grades = [{
-                'subject': grade.subject.name,
-                'grade_value': grade.grade_value,
-                'date': grade.date
-            } for grade in student.grades]
-
-            result.append({
-                'id': student.id,
-                'name': student.name,
-                'lastname': student.lastname,
-                'grades': grades
-            })
-
-        return result, 200
+# Resource for retrieving, updating, and deleting students
 class StudentById(Resource):
     def get(self, student_id=None, student_name=None):
         if student_id:
@@ -82,8 +68,24 @@ class StudentById(Resource):
 
             return {'message': 'No students found with that name'}, 404
         
-        return {'message': 'Student not found'}, 404
+        # Return all students if no filters are applied
+        students = Student.query.all()
+        result = []
+        for student in students:
+            grades = [{
+                'subject': grade.subject.name,
+                'grade_value': grade.grade_value,
+                'date': grade.date
+            } for grade in student.grades]
 
+            result.append({
+                'id': student.id,
+                'name': student.name,
+                'lastname': student.lastname,
+                'grades': grades
+            })
+
+        return result, 200
 
     def delete(self, student_id):
         student = Student.query.get(student_id)
@@ -93,6 +95,7 @@ class StudentById(Resource):
             return {'message': 'Student deleted successfully'}, 200
         return {'message': 'Student not found'}, 404
 
+# Resource to add a subject
 class AddSubject(Resource):
     def post(self):
         args = subject_parser.parse_args()
@@ -101,7 +104,21 @@ class AddSubject(Resource):
         db.session.commit()
         return {'message': 'Subject added successfully'}, 201
 
-    def get(self):
+# Resource for retrieving, updating, and deleting subjects
+class SubjectById(Resource):
+    def get(self, subject_id=None, subject_name=None):
+        if subject_id:
+            subject = Subject.query.get(subject_id)
+            if subject:
+                return {'id': subject.id, 'name': subject.name}, 200
+        
+        if subject_name:
+            subjects = Subject.query.filter(Subject.name.ilike(f'%{subject_name}%')).all()
+            if subjects:
+                return [{'id': subject.id, 'name': subject.name} for subject in subjects], 200
+            return {'message': 'No subjects found with that name'}, 404
+        
+        # Return all subjects if no filters are applied
         subjects = Subject.query.all()
         result = []
         for subject in subjects:
@@ -118,22 +135,6 @@ class AddSubject(Resource):
             })
 
         return result, 200
-
-
-class SubjectById(Resource):
-    def get(self, subject_id=None, subject_name=None):
-        if subject_id:
-            subject = Subject.query.get(subject_id)
-            if subject:
-                return {'id': subject.id, 'name': subject.name}, 200
-        
-        if subject_name:
-            subjects = Subject.query.filter(Subject.name.ilike(f'%{subject_name}%')).all()
-            if subjects:
-                return [{'id': subject.id, 'name': subject.name} for subject in subjects], 200
-            return {'message': 'No subjects found with that name'}, 404
-        
-        return {'message': 'Subject not found'}, 404
 
     def put(self, subject_id):
         subject = Subject.query.get(subject_id)
@@ -152,6 +153,7 @@ class SubjectById(Resource):
             return {'message': 'Subject deleted successfully'}, 200
         return {'message': 'Subject not found'}, 404
 
+# Resource to add a grade
 class AddGrade(Resource):
     def post(self):
         args = grade_parser.parse_args()
@@ -173,16 +175,7 @@ class AddGrade(Resource):
         db.session.commit()
         return {'message': 'Grade added successfully'}, 201
 
-    def get(self):
-        grades = Grade.query.all()
-        result = [{
-            'student_id': grade.student_id,
-            'subject_id': grade.subject_id,
-            'date': grade.date,
-            'grade_value': grade.grade_value
-        } for grade in grades]
-        return result, 200
-
+# Resource for retrieving, updating, and deleting grades
 class GradeById(Resource):
     def get(self, grade_id=None, student_name=None, subject_name=None):
         if grade_id:
@@ -211,7 +204,15 @@ class GradeById(Resource):
                 return {'message': 'Grade not found for given student and subject'}, 404
             return {'message': 'Student or Subject not found'}, 404
         
-        return {'message': 'Grade not found'}, 404
+        # Return all grades if no filters are applied
+        grades = Grade.query.all()
+        result = [{
+            'student_id': grade.student_id,
+            'subject_id': grade.subject_id,
+            'date': grade.date,
+            'grade_value': grade.grade_value
+        } for grade in grades]
+        return result, 200
 
     def put(self, grade_id):
         grade = Grade.query.get(grade_id)
